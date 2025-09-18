@@ -1,28 +1,36 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
-const DEFAULT_MOCK_CURRENCIES_BALANCE = {
-  BUSD: 20000,
-  ETH: 1400,
-  WBTC: 150
-};
+import { getAvailableBalanceAPI } from '../../apis';
+import { useToast } from '../../contexts';
 
 export const useMockBalance = () => {
-  const [availableBalance, setAvailableBalance] = useState<Record<string, number>>(() => {
-    let parseBalance = {};
-    try {
-      const _localBalance = localStorage.getItem('currenciesBalance');
-      parseBalance = _localBalance ? JSON.parse(localStorage.getItem('currenciesBalance') ?? '{}') : DEFAULT_MOCK_CURRENCIES_BALANCE;
-    } catch (error) {
-      console.error(error);
-    }
+  const { showToast } = useToast();
+  const [availableBalance, setAvailableBalance] = useState<Record<string, number>>();
+  const [loading, setLoading] = useState<boolean>(false);
 
-    return parseBalance;
-  });
-
+  // BE Should handle this after converting, just mock FE side
   const updateAvailableBalance = (balance: Record<string, number>) => {
     localStorage.setItem('currenciesBalance', JSON.stringify(balance));
     setAvailableBalance(balance);
   };
 
-  return { availableBalance, updateAvailableBalance };
+  useEffect(() => {
+    if (availableBalance) return;
+
+    const fetchAvailableBalance = async () => {
+      try {
+        setLoading(true);
+        const balance = await getAvailableBalanceAPI();
+        setAvailableBalance(balance);
+      } catch (error) {
+        showToast(String(error));
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAvailableBalance();
+  }, []);
+
+  return { availableBalance: availableBalance ?? {}, loadingBalance: loading, updateAvailableBalance };
 };

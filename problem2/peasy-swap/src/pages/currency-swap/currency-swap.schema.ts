@@ -8,7 +8,7 @@ export const createCurrencySwapSchema = (availableBalance: Record<string, number
         date: z.string(),
         price: z.number()
       }),
-      fromCurrencyAmt: z.coerce.number().min(0, 'Amount must be greater than 0') as z.ZodNumber,
+      fromCurrencyAmt: z.coerce.number().gt(0, 'Amount must be greater than 0') as z.ZodNumber,
       toCurrencyInfo: z.object({
         currency: z.string(),
         date: z.string(),

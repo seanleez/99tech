@@ -1,6 +1,7 @@
 import clsx from 'clsx';
 import React, { forwardRef, useEffect, useState } from 'react';
 
+import { formatCurrency } from '../../util';
 import { INumberInputProps } from './number-input.type';
 
 const DECIMAL_SEPARATOR = '.';
@@ -10,8 +11,8 @@ export const NumberInput = forwardRef<HTMLInputElement, INumberInputProps>(
     const [displayValue, setDisplayValue] = useState<string>(value?.toString() || '');
 
     const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-      const inputValue = event.target.value;
-
+      // Replace comma
+      const inputValue = event.target.value.replace(/,/g, '');
       // Only allow numbers and one period
       if (!/^[0-9]*\.?[0-9]*$/.test(inputValue)) return;
 
@@ -40,7 +41,7 @@ export const NumberInput = forwardRef<HTMLInputElement, INumberInputProps>(
           type="text"
           ref={ref}
           className={clsx('form-control', { 'is-invalid': error }, className)}
-          value={displayValue}
+          value={displayValue.endsWith(DECIMAL_SEPARATOR) ? displayValue : formatCurrency(displayValue)}
           onChange={handleChange}
           {...props}
         />

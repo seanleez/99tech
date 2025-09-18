@@ -1,1 +1,2 @@
-export * from './get-conversion-rate.api';
+export * from './post-convert-currencies.api';
+export * from './get-available-balance.api';
