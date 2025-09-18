@@ -1,0 +1,21 @@
+.header {
+  background-color: black;
+  padding: 8px;
+
+  &__container {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+
+    img {
+      width: 48px;
+      height: 48px;
+    }
+
+    span {
+      font-size: 32px;
+      color: #ffc107;
+      font-weight: 700;
+    }
+  }
+}
