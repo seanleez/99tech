@@ -17,7 +17,7 @@ export const CurrencySwapPage: React.FC = React.memo(() => {
   const { showToast } = useToast();
   const { availableBalance, loadingBalance, updateAvailableBalance } = useMockBalance();
 
-  const { formState, control, setValue, getValues, watch, handleSubmit } = useForm<TCurrencySwapFormData>({
+  const { formState, control, trigger, setValue, getValues, watch, handleSubmit } = useForm<TCurrencySwapFormData>({
     resolver: zodResolver(createCurrencySwapSchema(availableBalance)),
     reValidateMode: 'onChange',
     defaultValues: {
@@ -57,29 +57,37 @@ export const CurrencySwapPage: React.FC = React.memo(() => {
     setValue('toCurrencyAmt', _tempAmt);
   };
 
-  const handleFromCurrencyAmtChange = (value: number, onChange: (value: number) => void) => {
-    onChange(value);
+  const updateFromCurrencyAmtByRate = (amt: number) => {
+    const fromCurrencyInfo = getValues('fromCurrencyInfo');
+    const toCurrencyInfo = getValues('toCurrencyInfo');
+    const convertedAmount = (amt * (toCurrencyInfo.price ?? 1)) / (fromCurrencyInfo.price ?? 1);
+    setValue('fromCurrencyAmt', convertedAmount);
+  };
 
-    if (!value) {
+  const updateToCurrencyAmtByRate = (amt: number) => {
+    const fromCurrencyInfo = getValues('fromCurrencyInfo');
+    const toCurrencyInfo = getValues('toCurrencyInfo');
+    const convertedAmount = (amt * (fromCurrencyInfo.price ?? 1)) / (toCurrencyInfo.price ?? 1);
+    setValue('toCurrencyAmt', convertedAmount);
+  };
+
+  const handleFromCurrencyAmtChange = (amt: number, onChange: (value: number) => void) => {
+    onChange(amt);
+
+    if (!amt) {
       setValue('toCurrencyAmt', 0);
     } else {
-      const fromCurrencyInfo = getValues('fromCurrencyInfo');
-      const toCurrencyInfo = getValues('toCurrencyInfo');
-      const convertedAmount = (value * (fromCurrencyInfo.price ?? 1)) / (toCurrencyInfo.price ?? 1);
-      setValue('toCurrencyAmt', convertedAmount);
+      updateToCurrencyAmtByRate(amt);
     }
   };
 
-  const handleToCurrencyAmtChange = (value: number, onChange: (value: number) => void) => {
-    onChange(value);
+  const handleToCurrencyAmtChange = (amt: number, onChange: (value: number) => void) => {
+    onChange(amt);
 
-    if (!value) {
+    if (!amt) {
       setValue('fromCurrencyAmt', 0);
     } else {
-      const fromCurrencyInfo = getValues('fromCurrencyInfo');
-      const toCurrencyInfo = getValues('toCurrencyInfo');
-      const convertedAmount = (value * (toCurrencyInfo.price ?? 1)) / (fromCurrencyInfo.price ?? 1);
-      setValue('fromCurrencyAmt', convertedAmount);
+      updateFromCurrencyAmtByRate(amt);
     }
   };
 
@@ -178,7 +186,11 @@ export const CurrencySwapPage: React.FC = React.memo(() => {
               <CurrencyDropdown
                 currenciesList={CURRENCIES.filter(cur => Object.keys(availableBalance).includes(cur.currency))}
                 selectedCurrency={fromCurrencyInfo}
-                onSelectCurrency={cur => setValue('fromCurrencyInfo', cur)}
+                onSelectCurrency={cur => {
+                  setValue('fromCurrencyInfo', cur);
+                  trigger();
+                  updateToCurrencyAmtByRate(getValues('fromCurrencyAmt'));
+                }}
               />
             </div>
           </div>
@@ -202,7 +214,14 @@ export const CurrencySwapPage: React.FC = React.memo(() => {
                   />
                 )}
               />
-              <CurrencyDropdown selectedCurrency={toCurrencyInfo} onSelectCurrency={cur => setValue('toCurrencyInfo', cur)} />
+              <CurrencyDropdown
+                selectedCurrency={toCurrencyInfo}
+                onSelectCurrency={cur => {
+                  setValue('toCurrencyInfo', cur);
+                  trigger();
+                  updateFromCurrencyAmtByRate(getValues('toCurrencyAmt') ?? 0);
+                }}
+              />
             </div>
           </div>
 
